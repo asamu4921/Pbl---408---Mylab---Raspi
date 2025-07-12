@@ -67,7 +67,7 @@ def get_data_dosen_terbaru():
         )
         cursor = conn.cursor()
 
-        dosen_terdaftar = ['JOKOWI', 'SAIF', 'NINDIA']
+        dosen_terdaftar = ['Banu Failasuf, S.Tr', 'Agus Riady, A.Md.Kom', 'Supardianto, S.ST.M.Eng.','Sartikha, S. ST., M.Eng']
         for idx, nama in enumerate(dosen_terdaftar, start=1):
             query = """
                 SELECT status FROM aktivitas_ruang_dosen
@@ -86,9 +86,10 @@ def get_data_dosen_terbaru():
         print(f"[MYSQL ERROR] {err}")
         # Jika error, fallback data dummy
         data = [
-            {"no": 1, "nama": "JOKOWI", "status": "Tidak Ada"},
-            {"no": 2, "nama": "SAIF", "status": "Tidak Ada"},
-            {"no": 3, "nama": "NINDIA", "status": "Tidak Ada"},
+            {"no": 1, "nama": "Banu Failasuf, S.Tr", "status": "Tidak Ada"},
+            {"no": 2, "nama": "Agus Riady, A.Md.Kom", "status": "Tidak Ada"},
+            {"no": 3, "nama": "Supardianto, S.ST.M.Eng.", "status": "Tidak Ada"},
+            {"no": 4, "nama": "Sartikha, S. ST., M.Eng", "status": "Tidak Ada"},
         ]
     return data
 
