@@ -4,7 +4,7 @@ exports.getRuangLab = (req, res) => {
   const namaLaboran = req.session.user.nama;
 
   let kodeRuangan = '';
-  if (namaLaboran === 'iguana') kodeRuangan = 'RTF.IV.4';
+  if (namaLaboran === 'Ahmad Saif Almuflihin') kodeRuangan = 'RTF.IV.4';
   else if (namaLaboran === 'sule') kodeRuangan = 'RTF.IV.2';
   else if (namaLaboran === 'samurai') kodeRuangan = 'RTF.IV.1';
   else if (namaLaboran === 'uriel') kodeRuangan = 'RTF.III.6';
