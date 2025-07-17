@@ -280,11 +280,14 @@ function loadContent(number) {
     .then(res => res.json())
     .then(user => {
       let ruangan = '(Tidak Diketahui)';
-      if (user.nama === 'iguana') ruangan = 'RTF.IV.4 - Studio Audio';
+      if (user.nama === 'Ahmad Saif Almuflihin') ruangan = 'RTF.IV.4 - Studio Audio';
       else if (user.nama === 'sule') ruangan = 'RTF.IV.2 - Lab Animasi';
       else if (user.nama === 'samurai') ruangan = 'RTF.IV.1 - Lab Clay Modelling';
       else if (user.nama === 'uriel') ruangan = 'RTF.III.6 - Workspace Editing';
-
+      else if (user.nama === 'Banu Failasuf, S.Tr') ruangan = 'GU 705 - Workspace Animation Production';
+      else if (user.nama === 'Supardianto, S.ST.M.Eng.') ruangan = 'RTF.V.1 - Workspace Photogrammetry';
+      else if (user.nama === 'Sartikha, S. ST., M.Eng') ruangan = 'TA.XII.4 - Lab Programming';
+      else if (user.nama === 'Agus Riady, A.Md.Kom') ruangan = 'GU 805 - Workspace Data Scienceyy';
       fetch('/api/sidebarlaboran3')
         .then(res => res.json())
         .then(data => {
