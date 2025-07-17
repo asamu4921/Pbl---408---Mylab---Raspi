@@ -3,12 +3,12 @@ const conn = require('../db');
 exports.getJadwal = (req, res) => {
   const namaLogin = req.session.user.nama;
   const ruanganMap = {
-    'iguana': 'RTF.IV.4',
-    'sule': 'RTF.IV.2',
-    'samurai': 'RTF.IV.1',
-    'uriel': 'RTF.III.6',
-    'polnarev': 'GU 601',
-  };
+  'Ahmad Saif Almuflihin': 'RTF.IV.4',
+  'sule': 'RTF.IV.2',
+  'samurai': 'RTF.IV.1',
+  'uriel': 'RTF.III.6',
+  'polnarev': 'GU 601',
+};
   const kodeRuangan = ruanganMap[namaLogin];
 
   const hari = req.query.hari;
@@ -32,12 +32,12 @@ exports.addJadwal = (req, res) => {
   const namaLogin = req.session.user.nama;
 
   const aksesRuangan = {
-    iguana: 'RTF.IV.4',
-    sule: 'RTF.IV.2',
-    samurai: 'RTF.IV.1',
-    uriel: 'RTF.III.6',
-    polnarev: 'GU 601',
-  };
+  'Ahmad Saif Almuflihin': 'RTF.IV.4',
+  'sule': 'RTF.IV.2',
+  'samurai': 'RTF.IV.1',
+  'uriel': 'RTF.III.6',
+  'polnarev': 'GU 601',
+};
 
   const kodeRuangan = aksesRuangan[namaLogin] || '';
 
