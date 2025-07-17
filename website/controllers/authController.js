@@ -11,7 +11,7 @@ exports.login = (req, res) => {
 
   console.log(`[LOGIN] Coba login user: ${nama} | Role input: ${role}`);
 
-  conn.query('SELECT * FROM users WHERE nama = ?', [nama], (err, results) => {
+  conn.query('SELECT * FROM users WHERE nama = ? AND role = ?', [nama, role], (err, results) => {
     if (err) throw err;
 
     if (results.length === 0) {
@@ -21,10 +21,6 @@ exports.login = (req, res) => {
 
     const user = results[0];
 
-    if (user.role !== role) {
-      console.log(`[LOGIN] Gagal: role input ${role} tidak cocok dengan DB ${user.role}`);
-      return res.redirect('/?error=role');
-    }
 
     bcrypt.compare(password, user.password, (err, isMatch) => {
       if (err) throw err;
