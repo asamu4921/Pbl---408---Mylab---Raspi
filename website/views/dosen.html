@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Dosen</title>
+  <style>
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
+    nav {
+      width: 200px;
+      background: #f0f0f0;
+      padding: 10px;
+    }
+    nav button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      text-align: left;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
+    }
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 5px;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+    }
+    .popup {
+      background: #fff;
+      padding: 20px;
+      max-width: 300px;
+      margin: 100px auto;
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <button onclick="loadContent(1)">List Semua Dosen Di Ruangan Anda</button>
+    <button onclick="loadContent(2)">Aktivitas Anda</button>
+    <br />
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <main>
+    <h1>Dashboard Dosen</h1>
+    <div id="content">
+      <p>Pilih sidebar untuk load data.</p>
+    </div>
+  </main>
+
+  <!-- POPUP TAMBAH -->
+  <div id="add-popup" class="overlay">
+    <div class="popup">
+      <h3>Tambah Aktivitas</h3>
+      <form id="add-form">
+        <label>Status:</label><br>
+        <select name="status" required>
+          <option value="Ada">Ada</option>
+          <option value="Tidak Ada">Tidak Ada</option>
+        </select><br><br>
+        <button type="submit">Simpan</button>
+        <button type="button" onclick="closeAdd()">Batal</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- POPUP EDIT -->
+  <div id="edit-popup" class="overlay">
+    <div class="popup">
+      <h3>Edit Aktivitas</h3>
+      <form id="edit-form">
+        <label>Status:</label><br>
+        <select name="status" required>
+          <option value="Ada">Ada</option>
+          <option value="Tidak Ada">Tidak Ada</option>
+        </select><br><br>
+        <input type="hidden" name="id">
+        <button type="submit">Simpan</button>
+        <button type="button" onclick="closeEdit()">Batal</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function loadContent(number) {
+      const content = document.getElementById('content');
+
+      if (number === 2) {
+        const filterDate = document.getElementById('filterTanggal')?.value || '';
+
+        fetch(`/api/sidebardosen2${filterDate ? '?tanggal=' + filterDate : ''}`)
+          .then(res => res.json())
+          .then(data => {
+            let html = `
+              <button onclick="openAdd()">+ Tambah Aktivitas</button>
+              <h3>Filter Tanggal:</h3>
+              <input type="date" id="filterTanggal" value="${filterDate}">
+              <button onclick="loadContent(2)">Filter</button>
+
+              <h3>Daftar Aktivitas:</h3>
+              <table>
+                <tr><th>ID</th><th>Datetime</th><th>Status</th><th>Aksi</th></tr>
+            `;
+
+            data.forEach(row => {
+              html += `
+                <tr>
+                  <td>${row.id}</td>
+                  <td>${row.datetime}</td>
+                  <td>${row.status}</td>
+                  <td>
+                    <button onclick="openEdit(${row.id}, '${row.status}')">Edit</button>
+                    <button onclick="deleteAktivitas(${row.id})">Hapus</button>
+                  </td>
+                </tr>
+              `;
+            });
+
+            html += '</table>';
+            content.innerHTML = html;
+          });
+
+      } else if (number === 1) {
+        const filterDate1 = document.getElementById('filterTanggal1')?.value || '';
+
+        fetch(`/api/sidebardosen1${filterDate1 ? '?tanggal=' + filterDate1 : ''}`)
+            .then(res => res.json())
+            .then(data => {
+            let html = `
+                <h3>Filter Tanggal:</h3>
+                <input type="date" id="filterTanggal1" value="${filterDate1}">
+                <button onclick="loadContent(1)">Filter</button>
+
+                <h3>List Semua Dosen</h3>
+                <table>
+                <tr><th>ID</th><th>Nama</th><th>Datetime</th><th>Status</th></tr>
+            `;
+
+            data.forEach(row => {
+                html += `<tr><td>${row.id}</td><td>${row.nama_dosen}</td><td>${row.datetime}</td><td>${row.status}</td></tr>`;
+            });
+
+            html += '</table>';
+            content.innerHTML = html;
+            });
+        }
+
+    }
+
+    // ===== POPUP TAMBAH =====
+    function openAdd() {
+      document.getElementById('add-popup').style.display = 'block';
+    }
+    function closeAdd() {
+      document.getElementById('add-popup').style.display = 'none';
+    }
+    document.getElementById('add-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const status = this.status.value;
+
+      fetch('/api/sidebardosen2/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ status })
+      }).then(res => res.json()).then(() => {
+        this.reset();
+        closeAdd();
+        loadContent(2);
+      });
+    });
+
+    // ===== POPUP EDIT =====
+    function openEdit(id, status) {
+      document.getElementById('edit-popup').style.display = 'block';
+      const form = document.getElementById('edit-form');
+      form.status.value = status;
+      form.id.value = id;
+    }
+    function closeEdit() {
+      document.getElementById('edit-popup').style.display = 'none';
+    }
+    document.getElementById('edit-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const id = this.id.value;
+      const status = this.status.value;
+
+      fetch('/api/sidebardosen2/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id, status })
+      }).then(res => res.json()).then(() => {
+        closeEdit();
+        loadContent(2);
+      });
+    });
+
+    // ===== HAPUS =====
+    function deleteAktivitas(id) {
+      if (!confirm('Yakin hapus?')) return;
+      fetch('/api/sidebardosen2/delete', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id })
+      }).then(res => res.json()).then(() => {
+        loadContent(2);
+      });
+    }
+  </script>
+</body>
+</html>

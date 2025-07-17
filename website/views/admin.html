@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Admin</title>
+  <style>
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
+    nav {
+      width: 200px;
+      background: #f0f0f0;
+      padding: 10px;
+    }
+    nav button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      text-align: left;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <button onclick="loadContent(1)">API</button>
+    <button onclick="loadContent(2)">JADWAL MATAKULIAH</button>
+    <button onclick="loadContent(3)">RUANG DOSEN</button>
+    <button onclick="loadContent(4)">RUANG LAB</button>
+    <button onclick="loadContent(5)">USERS</button>
+    <button onclick="loadContent(6)">Sidebar 6</button>
+    <button onclick="loadContent(7)">Sidebar 7</button>
+    <br/>
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <main>
+    <h1>Dashboard Admin</h1>
+    <div id="content">
+      <p>Silakan pilih menu sidebar.</p>
+    </div>
+  </main>
+
+<script>
+function loadContent(number) {
+  const content = document.getElementById('content');
+
+  if (number === 1) {
+    const selectedKode = document.getElementById('filterRuangan')?.value || '';
+
+    // Fetch data pinjaman
+    fetch(`/api/sidebarlaboran1${selectedKode ? '?kode_ruangan=' + encodeURIComponent(selectedKode) : ''}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = `
+          <button onclick="updateAPI()">Update Data API</button>
+          <h3>Filter Kode Ruangan:</h3>
+          <select id="filterRuangan" onchange="loadContent(1)">
+            <option value="">-- Semua Ruangan --</option>
+          </select>
+
+          <h3>Data Peminjaman:</h3>
+          <table border="1">
+            <tr>
+              <th>ID</th><th>NIM</th><th>Nama</th><th>Jenis Kegiatan</th>
+              <th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th>
+              <th>Kode Ruangan</th><th>Nama Ruangan</th><th>Gedung</th>
+              <th>NIK PJ</th><th>Nama PJ</th>
+            </tr>
+        `;
+
+        data.forEach(row => {
+          html += `
+            <tr>
+              <td>${row.id}</td>
+              <td>${row.nim_mahasiswa}</td>
+              <td>${row.nama_mahasiswa}</td>
+              <td>${row.jenis_kegiatan} ${row.nama_kegiatan_other || ''}</td>
+              <td>${row.tanggal_pinjam}</td>
+              <td>${row.start_time}</td>
+              <td>${row.end_time}</td>
+              <td>${row.kode_ruangan}</td>
+              <td>${row.nama_ruangan}</td>
+              <td>${row.gedung_ruangan}</td>
+              <td>${row.nik_penanggungjawab}</td>
+              <td>${row.nama_penanggungjawab}</td>
+            </tr>
+          `;
+        });
+
+        html += '</table>';
+        content.innerHTML = html;
+
+        // Isi select ruangan
+        fetch('/api/sidebarlaboran1/ruangan')
+          .then(res => res.json())
+          .then(ruangan => {
+            const select = document.getElementById('filterRuangan');
+            ruangan.forEach(r => {
+              const opt = document.createElement('option');
+              opt.value = r.kode_ruangan;
+              opt.textContent = `${r.kode_ruangan} - ${r.nama_ruangan}`;
+              if (r.kode_ruangan === selectedKode) opt.selected = true;
+              select.appendChild(opt);
+            });
+          });
+      });
+
+    return; // Hentikan eksekusi di bawah kalau Sidebar 1
+  }
+
+  // Sidebar 2 - 7: Kosongkan dulu
+  if (number === 2) {
+  const content = document.getElementById('content');
+  const selectedKode = document.getElementById('filterRuangan2')?.value || '';
+
+  // Ambil data jadwal matkul
+  fetch(`/api/admin/sidebar2${selectedKode ? '?kode_ruangan=' + encodeURIComponent(selectedKode) : ''}`)
+    .then(res => res.json())
+    .then(data => {
+      let html = `
+        <h3>Filter Kode Ruangan:</h3>
+        <select id="filterRuangan2" onchange="loadContent(2)">
+          <option value="">-- Semua Ruangan --</option>
+        </select>
+
+        <h3>Jadwal Matakuliah</h3>
+        <table border="1">
+          <tr>
+            <th>ID</th><th>Matkul</th><th>Start</th><th>End</th>
+            <th>Kode Ruangan</th><th>Kelas</th><th>Dosen</th><th>Hari</th>
+          </tr>
+      `;
+
+      data.forEach(row => {
+        html += `
+          <tr>
+            <td>${row.id}</td>
+            <td>${row.matkul}</td>
+            <td>${row.start_time}</td>
+            <td>${row.end_time}</td>
+            <td>${row.kode_ruangan}</td>
+            <td>${row.kelas}</td>
+            <td>${row.dosen}</td>
+            <td>${row.hari}</td>
+          </tr>
+        `;
+      });
+
+      html += '</table>';
+      content.innerHTML = html;
+
+      // Isi select
+    fetch('/api/admin/sidebar2/ruangan')
+    .then(res => res.json())
+    .then(list => {
+        const select = document.getElementById('filterRuangan2');
+        list.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.kode_ruangan;
+        opt.textContent = `${r.kode_ruangan} | ${r.nama_ruangan}`;
+        if (r.kode_ruangan === selectedKode) opt.selected = true;
+        select.appendChild(opt);
+        });
+    });
+
+    });
+  }else if (number === 3) {
+  const content = document.getElementById('content');
+
+  fetch('/api/admin/sidebar3')
+    .then(res => res.json())
+    .then(data => {
+      let html = `<h3>Ruang Dosen 1 & 2</h3>`;
+
+      html += `
+        <label>Pilih Grup:</label>
+        <select id="filterGrup" onchange="renderAktivitasDosen()">
+          <option value="grup1">Grup 1</option>
+          <option value="grup2">Grup 2</option>
+        </select>
+
+        <div id="tabelDosen"></div>
+      `;
+
+      content.innerHTML = html;
+
+      // Simpan data ke global sementara
+      window._dosenData = data;
+
+      renderAktivitasDosen();
+    })
+    .catch(err => {
+      console.error(err);
+      content.innerHTML = `<p>Gagal load Ruang Dosen 1 & 2</p>`;
+    });
+  } else if (number === 4) {
+  const content = document.getElementById('content');
+  const selectedKode = document.getElementById('filterRuangan4')?.value || '';
+
+  fetch(`/api/admin/sidebar4${selectedKode ? '?kode_ruangan=' + encodeURIComponent(selectedKode) : ''}`)
+    .then(res => res.json())
+    .then(data => {
+      let html = `
+        <h3>Filter Kode Ruangan:</h3>
+        <select id="filterRuangan4" onchange="loadContent(4)">
+          <option value="">-- Semua Ruangan --</option>
+        </select>
+
+        <h3>Aktivitas Ruang Lab</h3>
+        <table border="1">
+          <tr>
+            <th>ID</th><th>Nama Laboran</th><th>Datetime</th><th>Status</th>
+          </tr>
+      `;
+
+      data.rows.forEach(row => {
+        html += `
+          <tr>
+            <td>${row.id}</td>
+            <td>${row.nama_laboran}</td>
+            <td>${row.datetime}</td>
+            <td>${row.status}</td>
+          </tr>
+        `;
+      });
+
+      html += '</table>';
+      content.innerHTML = html;
+
+      fetch('/api/admin/sidebar4/ruangan')
+        .then(res => res.json())
+        .then(list => {
+          const select = document.getElementById('filterRuangan4');
+          list.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.kode_ruangan;
+            opt.textContent = `${r.kode_ruangan} - ${r.nama_ruangan}`;
+            if (r.kode_ruangan === selectedKode) opt.selected = true;
+            select.appendChild(opt);
+          });
+        });
+    })
+    .catch(err => {
+      console.error(err);
+      content.innerHTML = `<p>Gagal load Sidebar 4</p>`;
+    });
+
+} else if (number === 5) {
+  const content = document.getElementById('content');
+  const selectedRole = document.getElementById('filterRole')?.value || 'all';
+
+  fetch(`/api/admin/sidebar5?role=${encodeURIComponent(selectedRole)}`)
+    .then(res => res.json())
+    .then(data => {
+      let html = `
+        <h3>Filter Role:</h3>
+        <select id="filterRole" onchange="loadContent(5)">
+          <option value="all">-- Semua --</option>
+          <option value="superadmin">Superadmin</option>
+          <option value="dosen">Dosen</option>
+          <option value="laboran">Laboran</option>
+        </select>
+
+        <h3>Data Users</h3>
+        <table border="1">
+          <tr>
+            <th>ID</th><th>Role</th><th>Nama</th><th>Foto</th><th>Password</th>
+          </tr>
+      `;
+
+      data.forEach(row => {
+        html += `
+          <tr>
+            <td>${row.id}</td>
+            <td>${row.role}</td>
+            <td>${row.nama}</td>
+            <td>${row.foto || '-'}</td>
+            <td>${row.password || '-'}</td>
+          </tr>
+        `;
+      });
+
+      html += `</table>`;
+      content.innerHTML = html;
+
+      // Pasang opsi yang terpilih
+      document.getElementById('filterRole').value = selectedRole;
+    })
+    .catch(err => {
+      console.error(err);
+      content.innerHTML = `<p>Gagal load data Users</p>`;
+    });
+} else if (number === 6) {
+    content.innerHTML = `<p>Konten Sidebar 6 masih kosong.</p>`;
+  } else if (number === 7) {
+    content.innerHTML = `<p>Konten Sidebar 7 masih kosong.</p>`;
+  }
+}
+
+function updateAPI() {
+  if (!confirm('Yakin ambil data API terbaru?')) return;
+
+  fetch('/api/updateapi/updateapi')
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Gagal update API');
+    });
+}
+
+// Fungsi render ulang tabel
+function renderAktivitasDosen() {
+  const grup = document.getElementById('filterGrup').value;
+  const data = window._dosenData[grup] || [];
+
+  let html = `
+    <table border="1">
+      <tr>
+        <th>ID</th><th>Nama Dosen</th><th>Datetime</th><th>Status</th>
+      </tr>
+  `;
+
+  data.forEach(row => {
+    html += `
+      <tr>
+        <td>${row.id}</td>
+        <td>${row.nama_dosen}</td>
+        <td>${row.datetime}</td>
+        <td>${row.status}</td>
+      </tr>
+    `;
+  });
+
+  html += `</table>`;
+
+  document.getElementById('tabelDosen').innerHTML = html;
+}
+
+</script>
+
+
+</body>
+</html>

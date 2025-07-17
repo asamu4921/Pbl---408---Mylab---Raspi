@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Laboran</title>
+  <style>
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+    }
+    nav {
+      width: 200px;
+      background: #f0f0f0;
+      padding: 10px;
+    }
+    nav button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      text-align: left;
+    }
+    main {
+      flex: 1;
+      padding: 20px;
+    }
+    table, th, td {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 5px;
+    }
+  .popup {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .popup-inner {
+    background: #fff;
+    padding: 20px;
+    width: 90%;
+    max-width: 500px;
+  }
+  </style>
+</head>
+<body>
+  <nav>
+    <button onclick="loadContent(1)">Pinjaman Ruangan</button>
+    <button onclick="loadContent(2)">Jadwal Matakuliah</button>
+    <button onclick="loadContent(3)">Aktivitas Anda Di Lab</button>
+    <button onclick="loadContent(4)">Ruang Lab</button>
+    <br />
+    <a href="/logout">Logout</a>
+  </nav>
+
+  <main>
+    <h1>Dashboard Laboran</h1>
+    <div id="content">
+      <p>Pilih sidebar untuk memuat data.</p>
+    </div>
+  </main>
+
+<script>
+function loadContent(number) {
+  const content = document.getElementById('content');
+
+  if (number === 1) {
+    const selectedKode = document.getElementById('filterRuangan')?.value || '';
+
+    // Fetch data pinjaman
+    fetch(`/api/sidebarlaboran1${selectedKode ? '?kode_ruangan=' + encodeURIComponent(selectedKode) : ''}`)
+      .then(res => res.json())
+      .then(data => {
+        let html = `
+          <button onclick="updateAPI()">Update Data API</button>
+          <h3>Filter Kode Ruangan:</h3>
+          <select id="filterRuangan" onchange="loadContent(1)">
+            <option value="">-- Semua Ruangan --</option>
+          </select>
+
+          <h3>Data Peminjaman:</h3>
+          <table>
+            <tr>
+              <th>ID</th><th>NIM</th><th>Nama</th><th>Jenis Kegiatan</th>
+              <th>Tanggal</th><th>Jam Mulai</th><th>Jam Selesai</th>
+              <th>Kode Ruangan</th><th>Nama Ruangan</th><th>Gedung</th>
+              <th>NIK PJ</th><th>Nama PJ</th>
+            </tr>
+        `;
+
+        data.forEach(row => {
+          html += `
+            <tr>
+              <td>${row.id}</td>
+              <td>${row.nim_mahasiswa}</td>
+              <td>${row.nama_mahasiswa}</td>
+              <td>${row.jenis_kegiatan} ${row.nama_kegiatan_other || ''}</td>
+              <td>${row.tanggal_pinjam}</td>
+              <td>${row.start_time}</td>
+              <td>${row.end_time}</td>
+              <td>${row.kode_ruangan}</td>
+              <td>${row.nama_ruangan}</td>
+              <td>${row.gedung_ruangan}</td>
+              <td>${row.nik_penanggungjawab}</td>
+              <td>${row.nama_penanggungjawab}</td>
+            </tr>
+          `;
+        });
+
+        html += '</table>';
+        content.innerHTML = html;
+
+        // Panggil list ruangan terbaru
+        fetch('/api/sidebarlaboran1/ruangan')
+          .then(res => res.json())
+          .then(ruangan => {
+            const select = document.getElementById('filterRuangan');
+            ruangan.forEach(r => {
+              const opt = document.createElement('option');
+              opt.value = r.kode_ruangan;
+              opt.textContent = `${r.kode_ruangan} - ${r.nama_ruangan}`;
+              if (r.kode_ruangan === selectedKode) opt.selected = true;
+              select.appendChild(opt);
+            });
+          });
+      });
+
+  } else if (number === 2) {
+  const selectedHari = document.getElementById('filterHari')?.value || '';
+
+  fetch(`/api/sidebarlaboran2${selectedHari ? '?hari=' + encodeURIComponent(selectedHari) : ''}`)
+    .then(res => res.json())
+    .then(data => {
+      let html = `
+      <h3>Filter Hari:</h3>
+      <select id="filterHari" onchange="loadContent(2)">
+        <option value="">-- Semua Hari --</option>
+        <option>Senin</option>
+        <option>Selasa</option>
+        <option>Rabu</option>
+        <option>Kamis</option>
+        <option>Jumat</option>
+        <option>Sabtu</option>
+        <option>Minggu</option>
+      </select>
+      <button onclick="openAdd()">+ Tambah Jadwal</button>
+      <h3>Jadwal Matakuliah</h3>
+      <table border="1">
+        <tr><th>ID</th><th>Matkul</th><th>Start</th><th>End</th><th>Kode Ruangan</th><th>Kelas</th><th>Dosen</th><th>Hari</th><th>Aksi</th></tr>
+      `;
+
+      data.forEach(row => {
+        html += `<tr>
+          <td>${row.id}</td>
+          <td>${row.matkul}</td>
+          <td>${row.start_time}</td>
+          <td>${row.end_time}</td>
+          <td>${row.kode_ruangan}</td>
+          <td>${row.kelas}</td>
+          <td>${row.dosen}</td>
+          <td>${row.hari}</td>
+          <td>
+            <button onclick="openEdit(${row.id}, '${row.matkul}', '${row.start_time}', '${row.end_time}', '${row.kelas}', '${row.dosen}', '${row.hari}')">Edit</button>
+            <button onclick="deleteJadwal(${row.id})">Hapus</button>
+          </td>
+        </tr>`;
+      });
+
+      html += '</table>';
+
+      // popup add + edit tetap sama (pakai yg versi kemarin)
+      html += `
+      <div id="add-popup" class="popup" style="display:none">
+        <div class="popup-inner">
+          <h3>Tambah Jadwal</h3>
+          <form id="add-form">
+            <input name="matkul" placeholder="Matkul" required /><br/>
+            <label>Jam Mulai:</label><br/>
+            <input name="start_time" type="time" required /><br/>
+            <label>Jam Selesai:</label><br/>
+            <input name="end_time" type="time" required /><br/>
+            <input name="kelas" placeholder="Kelas" required /><br/>
+            <input name="dosen" placeholder="Dosen" required /><br/>
+            <label>Hari:</label><br/>
+            <select name="hari" required>
+              <option value="">--Pilih Hari--</option>
+              <option>Senin</option>
+              <option>Selasa</option>
+              <option>Rabu</option>
+              <option>Kamis</option>
+              <option>Jumat</option>
+              <option>Sabtu</option>
+              <option>Minggu</option>
+            </select><br/><br/>
+            <button type="submit">Simpan</button>
+            <button type="button" onclick="closeAdd()">Tutup</button>
+          </form>
+        </div>
+      </div>
+
+      <div id="edit-popup" class="popup" style="display:none">
+        <div class="popup-inner">
+          <h3>Edit Jadwal</h3>
+          <form id="edit-form">
+            <input name="id" type="hidden" />
+            <input name="matkul" placeholder="Matkul" required /><br/>
+            <label>Jam Mulai:</label><br/>
+            <input name="start_time" type="time" required /><br/>
+            <label>Jam Selesai:</label><br/>
+            <input name="end_time" type="time" required /><br/>
+            <input name="kelas" placeholder="Kelas" required /><br/>
+            <input name="dosen" placeholder="Dosen" required /><br/>
+            <label>Hari:</label><br/>
+            <select name="hari" required>
+              <option value="">--Pilih Hari--</option>
+              <option>Senin</option>
+              <option>Selasa</option>
+              <option>Rabu</option>
+              <option>Kamis</option>
+              <option>Jumat</option>
+              <option>Sabtu</option>
+              <option>Minggu</option>
+            </select><br/><br/>
+            <button type="submit">Update</button>
+            <button type="button" onclick="closeEdit()">Tutup</button>
+          </form>
+        </div>
+      </div>
+      `;
+
+      content.innerHTML = html;
+
+      // Set selected
+      document.getElementById('filterHari').value = selectedHari;
+
+      // bind form sama seperti kemarin
+      document.getElementById('add-form').onsubmit = function(e) {
+        e.preventDefault();
+        const f = e.target;
+        fetch('/api/sidebarlaboran2/add', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            matkul: f.matkul.value,
+            start_time: f.start_time.value,
+            end_time: f.end_time.value,
+            kelas: f.kelas.value,
+            dosen: f.dosen.value,
+            hari: f.hari.value
+          })
+        }).then(() => {
+          closeAdd();
+          loadContent(2);
+        });
+      };
+
+      document.getElementById('edit-form').onsubmit = function(e) {
+        e.preventDefault();
+        const f = e.target;
+        fetch('/api/sidebarlaboran2/update', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            id: f.id.value,
+            matkul: f.matkul.value,
+            start_time: f.start_time.value,
+            end_time: f.end_time.value,
+            kelas: f.kelas.value,
+            dosen: f.dosen.value,
+            hari: f.hari.value
+          })
+        }).then(() => {
+          closeEdit();
+          loadContent(2);
+        });
+      };
+    });
+} else if (number === 3) {
+  fetch('/api/me')
+    .then(res => res.json())
+    .then(user => {
+      let ruangan = '(Tidak Diketahui)';
+      if (user.nama === 'iguana') ruangan = 'RTF.IV.4 - Studio Audio';
+      else if (user.nama === 'sule') ruangan = 'RTF.IV.2 - Lab Animasi';
+      else if (user.nama === 'samurai') ruangan = 'RTF.IV.1 - Lab Clay Modelling';
+      else if (user.nama === 'uriel') ruangan = 'RTF.III.6 - Workspace Editing';
+
+      fetch('/api/sidebarlaboran3')
+        .then(res => res.json())
+        .then(data => {
+          let html = `
+            <button onclick="openAddLab()">+ Tambah Aktivitas</button>
+            <h3>Aktivitas Ruang Lab (${ruangan})</h3>
+            <table border="1">
+              <tr>
+                <th>ID</th><th>Nama Laboran</th><th>Datetime</th><th>Status</th><th>Aksi</th>
+              </tr>
+          `;
+
+          data.forEach(row => {
+            html += `
+              <tr>
+                <td>${row.id}</td>
+                <td>${row.nama_laboran}</td>
+                <td>${row.datetime}</td>
+                <td>${row.status}</td>
+                <td>
+                  <button onclick="openEditLab(${row.id}, '${row.status}')">Edit</button>
+                  <button onclick="deleteLab(${row.id})">Hapus</button>
+                </td>
+              </tr>
+            `;
+          });
+
+          html += `</table>`;
+
+          // Popups
+          html += `
+            <div id="add-lab-popup" class="popup" style="display:none">
+              <div class="popup-inner">
+                <h3>Tambah Aktivitas</h3>
+                <form id="add-lab-form">
+                  <label>Status:</label><br/>
+                  <input name="status" placeholder="Tulis status..." required />
+                  <button type="button" onclick="setNormalStatus('add')">Set Normal</button>
+                  <br/><br/>
+                  <button type="submit">Simpan</button>
+                  <button type="button" onclick="closeAddLab()">Tutup</button>
+                </form>
+              </div>
+            </div>
+
+            <div id="edit-lab-popup" class="popup" style="display:none">
+              <div class="popup-inner">
+                <h3>Edit Aktivitas</h3>
+                <form id="edit-lab-form">
+                  <input name="id" type="hidden" />
+                  <label>Status:</label><br/>
+                  <input name="status" required />
+                  <button type="button" onclick="setNormalStatus('edit')">Set Normal</button>
+                  <br/><br/>
+                  <button type="submit">Update</button>
+                  <button type="button" onclick="closeEditLab()">Tutup</button>
+                </form>
+              </div>
+            </div>
+          `;
+
+          content.innerHTML = html;
+
+          // Bind form ADD
+          document.getElementById('add-lab-form').onsubmit = function(e) {
+            e.preventDefault();
+            const f = e.target;
+            fetch('/api/sidebarlaboran3/add', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ status: f.status.value })
+            }).then(() => {
+              closeAddLab();
+              loadContent(3);
+            });
+          };
+
+          // Bind form EDIT
+          document.getElementById('edit-lab-form').onsubmit = function(e) {
+            e.preventDefault();
+            const f = e.target;
+            fetch('/api/sidebarlaboran3/update', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ id: f.id.value, status: f.status.value })
+            }).then(() => {
+              closeEditLab();
+              loadContent(3);
+            });
+          };
+        });
+    });
+} else if (number === 4) {
+  fetch('/api/sidebarlaboran4')
+    .then(res => res.json())
+    .then(data => {
+      let html = `<h3>Data Ruang Lab (${data.kode_ruangan})</h3>`;
+      html += `<p>Tanggal: ${data.tanggal} — Hari: ${data.hari}</p>`;
+
+      html += `<h4>Data Pinjaman (Hari Ini)</h4>
+        <table border="1">
+          <tr>
+            <th>ID</th><th>NIM</th><th>Nama</th><th>Jenis Kegiatan</th>
+            <th>Tanggal</th><th>Start</th><th>End</th>
+            <th>Kode Ruangan</th><th>Nama Ruangan</th><th>Gedung</th>
+            <th>NIK PJ</th><th>Nama PJ</th>
+          </tr>`;
+
+      data.api.forEach(row => {
+        html += `<tr>
+          <td>${row.id}</td>
+          <td>${row.nim_mahasiswa}</td>
+          <td>${row.nama_mahasiswa}</td>
+          <td>${row.jenis_kegiatan} ${row.nama_kegiatan_other || ''}</td>
+          <td>${row.tanggal_pinjam}</td>
+          <td>${row.start_time}</td>
+          <td>${row.end_time}</td>
+          <td>${row.kode_ruangan}</td>
+          <td>${row.nama_ruangan}</td>
+          <td>${row.gedung_ruangan}</td>
+          <td>${row.nik_penanggungjawab}</td>
+          <td>${row.nama_penanggungjawab}</td>
+        </tr>`;
+      });
+      html += `</table>`;
+
+      html += `<h4>Jadwal Matakuliah (Hari Ini)</h4>
+        <table border="1">
+          <tr>
+            <th>ID</th><th>Matkul</th><th>Start</th><th>End</th>
+            <th>Kode Ruangan</th><th>Kelas</th><th>Dosen</th><th>Hari</th>
+          </tr>`;
+
+      data.jadwal.forEach(row => {
+        html += `<tr>
+          <td>${row.id}</td>
+          <td>${row.matkul}</td>
+          <td>${row.start_time}</td>
+          <td>${row.end_time}</td>
+          <td>${row.kode_ruangan}</td>
+          <td>${row.kelas}</td>
+          <td>${row.dosen}</td>
+          <td>${row.hari}</td>
+        </tr>`;
+      });
+      html += `</table>`;
+
+      content.innerHTML = html;
+    });
+} else if (number === 5) {
+    // Placeholder Sidebar 3
+    content.innerHTML = `<p>Konten Sidebar 3 masih kosong.</p>`;
+  }
+}
+function updateAPI() {
+  if (!confirm('Yakin ambil data API terbaru?')) return;
+
+  fetch('/api/updateapi/updateapi')
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+    })
+    .catch(err => {
+      console.error(err);
+      alert('Gagal update API');
+    });
+}
+function openAdd() {
+  document.getElementById('add-popup').style.display = 'flex';
+}
+function closeAdd() {
+  document.getElementById('add-popup').style.display = 'none';
+}
+function openEdit(id, matkul, start, end, kelas, dosen, hari) {
+  const f = document.getElementById('edit-form');
+  f.id.value = id;
+  f.matkul.value = matkul;
+  f.start_time.value = start;
+  f.end_time.value = end;
+  f.kelas.value = kelas;
+  f.dosen.value = dosen;
+  f.hari.value = hari;
+  document.getElementById('edit-popup').style.display = 'flex';
+}
+function closeEdit() {
+  document.getElementById('edit-popup').style.display = 'none';
+}
+function deleteJadwal(id) {
+  if (!confirm('Hapus jadwal ini?')) return;
+  fetch('/api/sidebarlaboran2/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ id })
+  }).then(() => loadContent(2));
+}
+// Popups Add/Edit
+function openAddLab() {
+  document.getElementById('add-lab-popup').style.display = 'block';
+}
+function closeAddLab() {
+  document.getElementById('add-lab-popup').style.display = 'none';
+}
+
+function openEditLab(id, status) {
+  document.getElementById('edit-lab-popup').style.display = 'block';
+  const f = document.getElementById('edit-lab-form');
+  f.id.value = id;
+  f.status.value = status;
+}
+function closeEditLab() {
+  document.getElementById('edit-lab-popup').style.display = 'none';
+}
+
+// Set Normal otomatis
+function setNormalStatus(form) {
+  if (form === 'add') {
+    document.querySelector('#add-lab-form input[name="status"]').value = 'Normal';
+  } else {
+    document.querySelector('#edit-lab-form input[name="status"]').value = 'Normal';
+  }
+}
+
+// Hapus
+function deleteLab(id) {
+  if (!confirm('Yakin hapus aktivitas?')) return;
+  fetch('/api/sidebarlaboran3/delete', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ id })
+  }).then(() => {
+    loadContent(3);
+  });
+}
+
+
+</script>
+
+</body>
+</html>

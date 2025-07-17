@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
+<body>
+  <h1>Login</h1>
+  <form action="/login" method="POST">
+    <label>Nama:</label>
+    <input type="text" name="nama" required>
+    <br>
+    <label>Password:</label>
+    <input type="password" name="password" required>
+    <br>
+    <label>Role:</label>
+    <select name="role" required>
+      <option value="superadmin">Superadmin</option>
+      <option value="laboran">Laboran</option>
+      <option value="dosen">Dosen</option>
+    </select>
+    <br>
+    <p id="error-msg" style="color: red;"></p>
+    <br>
+    <button type="submit">Login</button>
+  
+</form>
+</body>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const error = params.get('error');
+
+  if (error === 'role') {
+    document.getElementById('error-msg').innerText = 'Role tidak cocok.';
+  }
+  if (error === 'user') {
+    document.getElementById('error-msg').innerText = 'User tidak ditemukan.';
+  }
+  if (error === 'password') {
+    document.getElementById('error-msg').innerText = 'Password salah.';
+  }
+</script>
+
+</html>
